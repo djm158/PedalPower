@@ -40,11 +40,11 @@ public class PedalPower {
         
         
         //printout all data after filtering and cleaning algorithms
-        System.out.println("Total Points: "+d.count);
+        System.out.println("Total Points: "+d.totalPoints);
         System.out.println("Total errors: "+d.errorCount);
         System.out.println("New Data: ");
         int i;
-        for (i=0;i<d.totalPoints;i++){
+        for (i=0;i<(d.totalPoints-1);i++){
             System.out.println(" "+d.myPoints.get(i) );
         }
         
