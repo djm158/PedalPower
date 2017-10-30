@@ -3,7 +3,7 @@ package pedalpower;
 import java.time.Clock;  
 import java.time.LocalTime;
 /**
- *
+ *  Used for time stamps and display
  * @author Angie
  */
 public class time {

@@ -16,13 +16,11 @@ public class data {
     
     //testing variables
     boolean lowPassFilterTest=false;//true;//
-    boolean fit=true;//;false
     
     int totalPoints=0;//has good and bad
     int badCounter;
     int errorCount=0;
     int count=1;                            //initialized to 1 to avoid divide by zero
-    double average=0;                       //initialized to 0, because ASSUMPTION: must always begin at stopped position
     //high = 25.18 in W/kg from world class max https://www.trainingpeaks.com/blog/power-profiling/
     //25.18 W/kg * 1/2.20462 kg/lb = 11.42 W/lb => 12.00 W/lb :: Rounded up for potential future improvement
     double high = 12.00;    //W/lb       
@@ -32,30 +30,18 @@ public class data {
         totalPoints++;
         if (this.verify(newPoint)==true){
             this.myPoints.add(newPoint);
-            //check for tests
-            if (lowPassFilterTest){
-                //next bad point
-                if (badData.isEmpty()==false){
-                    badPoints bp=(badPoints)this.badData.get(0);
-                    if (this.count==bp.index +5){
-                        this.lowPassFilter();
-                    }
-                }
-            }
-            if (fit){
-                if (badData.isEmpty()==false){
-                    badPoints bp=(badPoints)this.badData.get(0);
-                    if (this.count==bp.index +5){
-                        System.out.println("fit");
-                        this.fit();
-                    }
+            //check for tests           
+            //next bad point
+            if (badData.isEmpty()==false){
+                badPoints bp=(badPoints)this.badData.get(0);
+                if (this.count==bp.index +5){
+                    this.lowPassFilter();
                 }
             }
         }
         else{
             System.out.println("Data in Error :"+ newPoint);
         }
-        
     }
     boolean verify(double newData){
         if(newData<0){
@@ -81,18 +67,7 @@ public class data {
                     return true;
                 }
             }
-            if (fit){ //first index to look for
-                if (this.badData.get(0)!=null){             //make sure there is bad data
-                    badPoints nextbp= (badPoints)this.badData.get(0);       
-                    int badIndex=nextbp.index;
-                    System.out.println("fit: Looking for: "+badIndex+ "   At:"+this.count);
-                    if (badIndex==this.count+5){
-                        this.fit();
-                        this.badData.remove(0);
-                    }
-                    return true;
-                }
-            }
+            
             return false;
         }
         if(newData>high){
@@ -103,21 +78,12 @@ public class data {
             bp.val=newData;                                                     //save bad point value
             this.badData.add(bp);                                               //add to end of arraylist(check value of list at 0 for next)
             //this.badIndexList.add(this.count);                                  
-            if (lowPassFilterTest){
-                //first index to look for
-                badPoints nextbp= (badPoints)this.badData.get(0);               //check first array location 
-                int badIndex=nextbp.index;                                      
-                System.out.println("Looking for: "+badIndex+ "   At:"+this.count);
-                
-                return true; //return true, because we save bad data for low pass filter test
-            }
-            if (fit){
-                 //first index to look for
-                badPoints nextbp= (badPoints)this.badData.get(0);
-                int badIndex=nextbp.index;
-                System.out.println("Looking for: "+badIndex+ "   At:"+this.count);
-                return true; //return true, because we save bad data for low pass filter test
-            }
+            //first index to look for
+            badPoints nextbp= (badPoints)this.badData.get(0);               //check first array location 
+            int badIndex=nextbp.index;                                      
+            System.out.println("Looking for: "+badIndex+ "   At:"+this.count);
+
+            return true; //return true, because we save bad data for low pass filter test
         }   
        
     if (abs(newData-lastData)>=variationConstant){
@@ -142,17 +108,12 @@ public class data {
                     //System.out.println("Reading "+i);
                     this.addData(inFile.nextDouble());         
                 }
-
                 inFile.close();
             }
-             catch(FileNotFoundException exception){
-                 System.out.println("COuld not find file: ");
-             }
-       
-            
+            catch(FileNotFoundException exception){
+                System.out.println("COuld not find file: ");
+            }
         }
-        
-        
     }
     void lowPassFilter(){
         System.out.println ("In low pass filter");
@@ -176,7 +137,9 @@ public class data {
         this.myPoints.set(this.totalPoints-6, temp);//fill with new floating average
         this.badData.remove(0);
     }
-        
+    /*
+    *   Used for algorithm testing will likely be removed
+    *
     void fit(){
         System.out.println("In fit");
         int goodDataCount=10; //if there are more holes in data, decrement for y val
@@ -196,14 +159,14 @@ public class data {
                 }
             } 
         }
-        //y=mx+b 
-        //y is constant time step => dx/dy(X-1)+(X-1)
+       
         double slope = goodDataCount/sumx ;//           
         double temp=(double)this.myPoints.get(this.totalPoints-7)*slope+(double)this.myPoints.get(this.totalPoints-7);        //add slope to last data point
         this.myPoints.set(this.totalPoints-6, temp);                            //fill with new linear fit
         this.badData.remove(0);
         System.out.println("New point=: "+temp+" @ "+ (this.totalPoints-6)+" Current slope: "+slope+" Gooddata count: "+goodDataCount);
     } 
+ */
 }
 
 

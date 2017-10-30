@@ -1,6 +1,5 @@
 package pedalpower;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 /**
  * @author Angie Hoeltje
  */
