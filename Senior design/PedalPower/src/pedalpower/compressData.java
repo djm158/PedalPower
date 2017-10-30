@@ -22,12 +22,25 @@ import java.util.ArrayList;
  * 
  * link to android display information:
  * https://developer.android.com/guide/practices/screens_support.html
+ * 
+ * note: Android S4 is approx 391 dp
  */
 public class compressData {
+    int maxPoints;
+    int compressionRatio;       //number of raw data points/ new points in array
+                                //i.e. 8 points raw to one point displayed=8
+                                //must then average next 8 points to add point to array
+                                //when array fills compress every 2 points to 1, compression ratio=compressionratio*2
+                                //numDisplayPoints=numDisplayPOints/2
     int sizeCompressed;
     int sizeNew;
     int numDisplayPoints;       //SHould be statically defined when agreed upon
     ArrayList outputPoints=new ArrayList();
     ArrayList Compressedpoints=new ArrayList();
+    void compress(){
+        
+        
+    }
+    
     
 }

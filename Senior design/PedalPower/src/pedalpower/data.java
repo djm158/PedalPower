@@ -8,14 +8,16 @@ import java.util.Scanner;
 
 /**
  *Angela Hoeltje
+ * data()
+ *      void addData(double newPoint)
+ *      boolean verify(double newData)
+ *      void getData ()     
+ *      void lowPassFilter()
+ * 
  */
 public class data {
     ArrayList myPoints=new ArrayList();
     ArrayList badData=new ArrayList();
-    ArrayList badIndexList=new ArrayList(); //append bad index to back-check from front
-    
-    //testing variables
-    boolean lowPassFilterTest=false;//true;//
     
     int totalPoints=0;//has good and bad
     int badCounter;
@@ -25,13 +27,12 @@ public class data {
     //25.18 W/kg * 1/2.20462 kg/lb = 11.42 W/lb => 12.00 W/lb :: Rounded up for potential future improvement
     double high = 12.00;    //W/lb       
     double lastData=0;
-    double variationConstant=1000;          //Need to find a constant for this
+    
+    
     void addData(double newPoint){
         totalPoints++;
         if (this.verify(newPoint)==true){
             this.myPoints.add(newPoint);
-            //check for tests           
-            //next bad point
             if (badData.isEmpty()==false){
                 badPoints bp=(badPoints)this.badData.get(0);
                 if (this.count==bp.index +5){
@@ -43,7 +44,7 @@ public class data {
             System.out.println("Data in Error :"+ newPoint);
         }
     }
-    boolean verify(double newData){
+    boolean verify(double newData){ //always returns true:: used for bad data input
         if(newData<0){
             System.out.println("---Negative value acquired");
             System.out.println("Fill index"+this.count);
@@ -52,23 +53,13 @@ public class data {
             bp.val=newData;
             this.badData.add(bp);
             errorCount++;
-            //this.badIndexList.add(this.count);
-            
-            if (lowPassFilterTest){//first index to look for
-                if (this.badData.get(0)!=null){            //make sure there is bad data
-                    badPoints nextbp= (badPoints)this.badData.get(0);       
-                    int badIndex=nextbp.index;
-                    System.out.println("Looking for: "+badIndex+ "   At:"+this.count);
-                    if (badIndex==this.count+5){
-                        this.lowPassFilter();
-                        
-                        //this.badIndexList.remove(0);
-                    }
-                    return true;
-                }
+            if (this.badData.get(0)!=null){            //make sure there is bad data
+                badPoints nextbp= (badPoints)this.badData.get(0);       
+                int badIndex=nextbp.index;
+                System.out.println("Looking for: "+badIndex+ "   At:"+this.count);
+                if (badIndex==this.count+5){ this.lowPassFilter(); }
+                return true;
             }
-            
-            return false;
         }
         if(newData>high){
             System.out.println("Number too high : "+newData+" > max: "+high);   //output for testing
@@ -77,25 +68,16 @@ public class data {
             bp.index=count;                                                     //save badpoints's index
             bp.val=newData;                                                     //save bad point value
             this.badData.add(bp);                                               //add to end of arraylist(check value of list at 0 for next)
-            //this.badIndexList.add(this.count);                                  
             //first index to look for
             badPoints nextbp= (badPoints)this.badData.get(0);               //check first array location 
             int badIndex=nextbp.index;                                      
             System.out.println("Looking for: "+badIndex+ "   At:"+this.count);
-
             return true; //return true, because we save bad data for low pass filter test
         }   
-       
-    if (abs(newData-lastData)>=variationConstant){
-            //NEED TO ADD ONCE VARIATION IS DECIDED
-        }
-        return true;
+       return true;
     }
     void getData () throws FileNotFoundException{
         //initialize first bad data point
-    
-        int i=-1;//just for testing/printing purposes
-        double newPoint=0;
         //implement all bluetooth to get data UNLESS testing
         if(PedalPower.testing==true){
             //get value from text file to test
@@ -119,7 +101,7 @@ public class data {
         System.out.println ("In low pass filter");
         //get all relative data points and find avereage
         int i;
-        double temp=0, sumx=0;
+        double temp, sumx=0;
         int goodDataCount=11;       //5 points before + badpoint+ 5 points after
         for(i=0;i<11;i++){
             try{
