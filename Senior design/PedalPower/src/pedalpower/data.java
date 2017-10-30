@@ -15,10 +15,10 @@ public class data {
     ArrayList badIndexList=new ArrayList(); //append bad index to back-check from front
     
     //testing variables
-    boolean lowPassFilterTest=false;
-    boolean fit=true;
+    boolean lowPassFilterTest=false;//true;//
+    boolean fit=true;//;false
     
-    
+    int totalPoints=0;//has good and bad
     int badCounter;
     int errorCount=0;
     int count=1;                            //initialized to 1 to avoid divide by zero
@@ -29,7 +29,7 @@ public class data {
     double lastData=0;
     double variationConstant=1000;          //Need to find a constant for this
     void addData(double newPoint){
-        
+        totalPoints++;
         if (this.verify(newPoint)==true){
             this.myPoints.add(newPoint);
             //check for tests
@@ -66,7 +66,7 @@ public class data {
             bp.val=newData;
             this.badData.add(bp);
             errorCount++;
-            this.badIndexList.add(this.count);
+            //this.badIndexList.add(this.count);
             
             if (lowPassFilterTest){//first index to look for
                 if (this.badData.get(0)!=null){            //make sure there is bad data
@@ -75,7 +75,8 @@ public class data {
                     System.out.println("Looking for: "+badIndex+ "   At:"+this.count);
                     if (badIndex==this.count+5){
                         this.lowPassFilter();
-                        this.badIndexList.remove(0);
+                        
+                        //this.badIndexList.remove(0);
                     }
                     return true;
                 }
@@ -87,7 +88,7 @@ public class data {
                     System.out.println("fit: Looking for: "+badIndex+ "   At:"+this.count);
                     if (badIndex==this.count+5){
                         this.fit();
-                        this.badIndexList.remove(0);
+                        this.badData.remove(0);
                     }
                     return true;
                 }
@@ -95,18 +96,17 @@ public class data {
             return false;
         }
         if(newData>high){
-            System.out.println("Number too high : "+newData+" > max: "+high);
-            errorCount++;
-            badPoints bp=new badPoints();
-            bp.index=count;
-            bp.val=newData;
-            this.badData.add(bp);
-            errorCount++;
-            this.badIndexList.add(this.count);
+            System.out.println("Number too high : "+newData+" > max: "+high);   //output for testing
+            errorCount++;                                                       //increment error count
+            badPoints bp=new badPoints();                                       //creat new bad point
+            bp.index=count;                                                     //save badpoints's index
+            bp.val=newData;                                                     //save bad point value
+            this.badData.add(bp);                                               //add to end of arraylist(check value of list at 0 for next)
+            //this.badIndexList.add(this.count);                                  
             if (lowPassFilterTest){
                 //first index to look for
-                badPoints nextbp= (badPoints)this.badData.get(0);
-                int badIndex=nextbp.index;
+                badPoints nextbp= (badPoints)this.badData.get(0);               //check first array location 
+                int badIndex=nextbp.index;                                      
                 System.out.println("Looking for: "+badIndex+ "   At:"+this.count);
                 
                 return true; //return true, because we save bad data for low pass filter test
@@ -118,9 +118,6 @@ public class data {
                 System.out.println("Looking for: "+badIndex+ "   At:"+this.count);
                 return true; //return true, because we save bad data for low pass filter test
             }
-                
-            
-             
         }   
        
     if (abs(newData-lastData)>=variationConstant){
@@ -137,7 +134,7 @@ public class data {
         if(PedalPower.testing==true){
             //get value from text file to test
             try{
-                File temp=new File("data.txt"); 
+                File temp=new File("sample.txt"); 
                 Scanner inFile = new Scanner(temp);
                 //System.out.println("At testing scanner");
                 while (inFile.hasNext()){
@@ -157,67 +154,56 @@ public class data {
         
         
     }
-        void lowPassFilter(){
-            System.out.println ("In low pass filter");
-            //get all relative data points and find avereage
-            int i;
-            double temp=0;
-            
-            //5 points before and after
-            
-            for(i=0;i<10;i++){
-                temp=temp+(double)this.myPoints.get(count-i-5);
-            }
-            //get average
-            temp=temp/11;
-            this.myPoints.add(count-5, temp);//fill with new floating average
-            this.badData.remove(0);
-        }
-        
-        void fit(){
-            System.out.println("In fit");
-            int n = 10;
-            double[] x = new double[10];
-            double sumx=0;
-            double sumy=0;
-            int i=0;
-            for (i=0;i<10;i++){
-                double temp=(double)this.myPoints.get(this.count-i-5);
-
-                x[i]=temp;
+    void lowPassFilter(){
+        System.out.println ("In low pass filter");
+        //get all relative data points and find avereage
+        int i;
+        double temp=0, sumx=0;
+        int goodDataCount=11;       //5 points before + badpoint+ 5 points after
+        for(i=0;i<11;i++){
+            try{
+                temp=(double)this.myPoints.get(this.totalPoints-i-5);
                 sumx=sumx+temp;
+                System.out.println("Sum: "+sumx+"="+temp+" + "+ (sumx - temp));
             }
-
-
-            double[] y = new double[]{1,1,1  ,1,1,1  ,1,1,1  ,1};
-            sumy=10;
-
-            double xbar = sumx / n;
-            double ybar = sumy / n;
-
-            // second pass: compute summary statistics
-            double xxbar = 0.0, yybar = 0.0, xybar = 0.0;
-            for ( i = 0; i < n; i++) {
-                xxbar += (x[i] - xbar) * (x[i] - xbar);
-                yybar += (y[i] - ybar) * (y[i] - ybar);
-                xybar += (x[i] - xbar) * (y[i] - ybar);
+            catch(ArrayIndexOutOfBoundsException exception){
+                //there is another hole in data
+                goodDataCount--;
             }
-            double beta1 = xybar / xxbar;
-            double beta0 = ybar - beta1 * xbar;
-
-            // print results
-            //System.out.println("y   = " + beta1 + " * x + " + beta0);
-
-            //my missing point
-            double point=0;
-            this.myPoints.add(this.count-5,point);
-            
-            //remove the point that has been filled
-            this.badData.remove(0);
-
+        }
+        //get average
+        temp=sumx/goodDataCount;
+        this.myPoints.set(this.totalPoints-6, temp);//fill with new floating average
+        this.badData.remove(0);
     }
-    
-    
+        
+    void fit(){
+        System.out.println("In fit");
+        int goodDataCount=10; //if there are more holes in data, decrement for y val
+        double sumx=0;
+        double sumSlope=0;
+        int i;
+        for (i=0;i<11;i++){
+            if (i!=5){  //do not include bad point
+                try{
+                    double temp=(double)this.myPoints.get(this.totalPoints-i-5);
+                    sumx=sumx+temp;
+                    System.out.println("Sum: "+sumx+"="+temp+" + "+ (sumx - temp));
+                }
+                catch(ArrayIndexOutOfBoundsException exception){
+                    //there is another hole in data
+                    goodDataCount--;
+                }
+            } 
+        }
+        //y=mx+b 
+        //y is constant time step => dx/dy(X-1)+(X-1)
+        double slope = goodDataCount/sumx ;//           
+        double temp=(double)this.myPoints.get(this.totalPoints-7)*slope+(double)this.myPoints.get(this.totalPoints-7);        //add slope to last data point
+        this.myPoints.set(this.totalPoints-6, temp);                            //fill with new linear fit
+        this.badData.remove(0);
+        System.out.println("New point=: "+temp+" @ "+ (this.totalPoints-6)+" Current slope: "+slope+" Gooddata count: "+goodDataCount);
+    } 
 }
 
 

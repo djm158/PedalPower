@@ -1,14 +1,9 @@
-
 package pedalpower;
-
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-
 /**
  * @author Angie Hoeltje
  */
-
-
 public class PedalPower {
     public static boolean testing=true;
     public static boolean testingPrintToScreen;
@@ -34,20 +29,25 @@ public class PedalPower {
         currentTime.getTime();
         //timeTest();                     //---testing function for time class
        
-        
-        
-        //initialize UI
-        
+       
         //get information via blluetooth
-        double newData = 0;
+        if (!testing){
+            d.getData();
+        }
         //newData.getData.myListener();
         if (testing){
             d.getData();
         }
         
+        
+        //printout all data after filtering and cleaning algorithms
         System.out.println("Total Points: "+d.count);
         System.out.println("Total errors: "+d.errorCount);
-        
+        System.out.println("New Data: ");
+        int i;
+        for (i=0;i<d.totalPoints;i++){
+            System.out.println(" "+d.myPoints.get(i) );
+        }
         
         
         
