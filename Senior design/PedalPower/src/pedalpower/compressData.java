@@ -5,6 +5,8 @@
  */
 package pedalpower;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author Angie
@@ -18,7 +20,14 @@ package pedalpower;
  * Points per second? 10? Immediate compress vs total compress?
  * 
  * 
+ * link to android display information:
+ * https://developer.android.com/guide/practices/screens_support.html
  */
 public class compressData {
+    int sizeCompressed;
+    int sizeNew;
+    int numDisplayPoints;       //SHould be statically defined when agreed upon
+    ArrayList outputPoints=new ArrayList();
+    ArrayList Compressedpoints=new ArrayList();
     
 }
