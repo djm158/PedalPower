@@ -165,9 +165,20 @@ Once Bluetooth is hooked up just need to return it from this function.
         Log.d("tag", " Debug:                             In onCreate in start.java");
 
         graph = (GraphView) findViewById(R.id.graph);
-        series = new LineGraphSeries<DataPoint>(new DataPoint[] {});
 
+        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
+                new DataPoint(0, 0),
+        });
+        d=new data();
+        int i;
+        //initialize graphData to all 0s
+        for (i=0;i<10;i++){
+            d.graphData.add(i, (double) 0);
+            DataPoint v = new DataPoint(i,d.graphData.get(i));
 
+            series.appendData(v, true,50,false);
+        }
+        /*
         graph.getViewport().setMinX(0);
         graph.getViewport().setMaxX(5.5);
         graph.getViewport().setMinY(0);
@@ -175,13 +186,10 @@ Once Bluetooth is hooked up just need to return it from this function.
 
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setXAxisBoundsManual(true);
-        d=new data();
-        int i;
-        //initialize graphData to all 0s
-        for (i=0;i<10;i++){
-            d.graphData.add(i,0);
-            series.appendData(new DataPoint(i, (double)d.graphData.get(i)), true,50,false);
-        }
+*/
+
+
+
 
         super.onCreate(savedInstanceState);
 
