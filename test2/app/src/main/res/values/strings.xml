@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">test</string>
+    <string name="pedalpower_com">PedalPower.com</string>
+    <string name="start">Start</string>
+    <string name="history">History</string>
+    <string name="PedalPower">PedalPower</string>
+    <string name="average_power">Average Power</string>
+    <string name="blank" />
+    <string name="average_time">Average Time</string>
+    <string name="last_time">Last Time</string>
+    <string name="no_average_power_to_show_yet">No Average Power to show yet</string>
+    <string name="last_average_power">Last Average Power</string>
+    <string name="no_average_time_to_show_yet">No Average Time to show yet</string>
+    <string name="achievements">Achievements</string>
+    <string name="no_top_power_recording_yet">No top power recording yet</string>
+    <string name="top_time">Top Time</string>
+    <string name="top_power">Top Power</string>
+    <string name="_2">2.</string>
+    <string name="_1">1.</string>
+    <string name="_3">3.</string>
+    <string name="_4">4.</string>
+    <string name="_5">5.</string>
+    <string name="top_times">Top Times</string>
+    <string name="current_power">Current Power</string>
+</resources>
