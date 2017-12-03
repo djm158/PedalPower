@@ -1,8 +1,24 @@
 package com.pedalpower.test;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
+
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.UUID;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.Viewport;
@@ -19,53 +35,56 @@ import java.util.TimerTask;
  * Created by Angie on 11/13/2017.
  */
 public class start extends AppCompatActivity {
+    //graph variables
     GraphView graph;
     LineGraphSeries<DataPoint> series;
-    //instantiate powerOutputto screen here to prevent Null pointer exception
     TextView powerOutputToScreen;
+    //variables used to run ever 500 ms
+    private Runnable myTimer;
+    private final Handler myHandler = new Handler();
+    //time elapsed variables for each run
+    long start;
+    long end;
+    long totalTimeSpent;
+    //for top power
+    double powerHigh=0;
+
     data d;
+    double sumPower;
+    double numRidesCompleted;
+
+
+
 
     int totalPoints = 0;//has good and bad
-    int badCounter;
     int errorCount = 0;
-    //initialized to 1 to avoid divide by zero
-    //high = 25.18 in W/kg from world class max https://www.trainingpeaks.com/blog/power-profiling/
-    //25.18 W/kg * 1/2.20462 kg/lb = 11.42 W/lb => 12.00 W/lb :: Rounded up for potential future improvement
+    int countTo20 = 0;
     double high = 12.00;    //W/lb
     double lastData = 0;
+    int lastSecond = 0;       //used to know when to update UI time
+    int lastNano = 0;         //used to know when to update UI power :: starting with every 10th of a second
+    double totalPower = 0;    //used for average power
+    double totalTimeInms = 0;  //used for average power
 
-    public void main() throws FileNotFoundException, InterruptedException {
-
-        Log.d("tag", " Debug:                             In Main in start.java");
-
-        // /Variables-----------------------------------------------------------------------------------
-        int lastSecond = 0;       //used to know when to update UI time
-        int lastNano = 0;         //used to know when to update UI power :: starting with every 10th of a second
-        double totalPower = 0;    //used for average power
-        double totalTimeInms = 0;  //used for average power
-
-        //gets the current Power and updates the app
-        getData();
-        int i;
-        for(i=0;i<totalPoints;i++){
-            Log.d("ADebugTag", "Line Graph Value: "+ (double)d.myPoints.get(i));
-        }
-        //updates the graph
-        //series.appendData(new DataPoint(totalPoints , d.myPoints.get(totalPoints-1) ), true, 10);
-
-
-        //printout all data after filtering and cleaning algorithms
-        System.out.println("Total Points: " + totalPoints);
-        System.out.println("Total errors: " + errorCount);
-    }
 
     void addData(double newPoint) {
+        countTo20++;
         totalPoints++;
         System.out.println("total points: " + totalPoints + "       totalPoints+1: " + (totalPoints + 1));
         Log.d("ADebugTag", "Value: " + Double.toString(newPoint));
         if (verify(newPoint) == true) {
+            System.out.println("=======================================================in  verify ");
+            if (newPoint>powerHigh){
+                powerHigh=newPoint;
+            }
+            sumPower=sumPower+newPoint;
             d.myPoints.add(newPoint);
-            powerOutputToScreen.setText("" + newPoint);
+           // powerOutputToScreen.setText("" + newPoint);
+
+            setPower(""+newPoint);
+            DataPoint dp = new DataPoint(countTo20, newPoint);
+            series.appendData(dp, true, 20);
+
             if (d.badData.isEmpty() == false) {
                 badPoints bp = (badPoints) d.badData.get(0);
                 if (totalPoints + 1 == bp.index + 5) {
@@ -114,6 +133,7 @@ public class start extends AppCompatActivity {
     }
 
     void getData() throws FileNotFoundException, InterruptedException {
+        Log.d("ADebugTag", "IN get Data!");
         //initialize first bad data point
         //implement all bluetooth to get data UNLESS testing
 
@@ -124,7 +144,7 @@ Once Bluetooth is hooked up just need to return it from this function.
      */
         //implementation for testing:: getting a random number
         Random r = new Random();
-        int whole = r.nextInt(1300);
+        int whole = r.nextInt(1500);
 
         double randomDataPoint = (double) whole / 100;
         Log.d("ADebugTag", "Random: " + Double.toString(randomDataPoint));
@@ -149,117 +169,198 @@ Once Bluetooth is hooked up just need to return it from this function.
         }
         //get average
         temp = sumx / goodDataCount;
+        sumPower = sumPower+temp;
         d.myPoints.set(this.totalPoints - 6, temp);//fill with new floating average
         d.badData.remove(0);
     }
 
-    void compress() {
-
-
-    }
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_start);
+        //get start time
+        start = Calendar.getInstance().getTimeInMillis();
+        Log.d("tag", " Debug:                             start:"+start);
+
         //should initialize all variables in on Create
         Log.d("tag", " Debug:                             In onCreate in start.java");
-
         graph = (GraphView) findViewById(R.id.graph);
+        series = new LineGraphSeries<>();
+        graph.addSeries(series);
+        d = new data();
 
-        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
-                new DataPoint(0, 0),
-        });
-        d=new data();
-        int i;
-        //initialize graphData to all 0s
-        for (i=0;i<10;i++){
-            d.graphData.add(i, (double) 0);
-            DataPoint v = new DataPoint(i,d.graphData.get(i));
-
-            series.appendData(v, true,50,false);
-        }
-        /*
         graph.getViewport().setMinX(0);
-        graph.getViewport().setMaxX(5.5);
+        graph.getViewport().setMaxX(20);
         graph.getViewport().setMinY(0);
         graph.getViewport().setMaxY(15.0);
 
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setXAxisBoundsManual(true);
-*/
-
-
-
-
-        super.onCreate(savedInstanceState);
-
-
-        setContentView(R.layout.activity_start);
-        powerOutputToScreen= (TextView) findViewById(R.id.currentPowerStartActivity);
+        powerOutputToScreen = (TextView) findViewById(R.id.currentPowerStartActivity);
     }
 
     protected void onStart() {
         super.onStart();
+        powerHigh=0;
+        long start = Calendar.getInstance().getTimeInMillis();
 
         Log.d("tag", " Debug:                             In onStart in start.java");
     }
 
     protected void onResume() {
+        MainActivity.totalNumRides++;
         super.onResume();
-        Log.d("tag", " Debug:                             In onResume in start.java");
-        // powerOutputToScreen=
-        Thread t = new Thread() {
+        powerHigh=0;
+        Log.d("tag", " Debug:                             In onResume before runnable in start.java");
 
+        myTimer = new Runnable() {
             @Override
             public void run() {
                 try {
-                    while (!isInterrupted()) {
-                        Thread.sleep(1000);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    main();
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-                    }
+                    getData();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+                myHandler.postDelayed(this, 500);
             }
         };
-
-        t.start();
-       /*
-       Timer imlplementation - only works one time
-       try {
-            timer = new Timer();
-            timerTask = new TimerTask() {
-                @Override
-                public void run() {
-
-                }
-            };
-            main();
-            timer.schedule(timerTask, 100, 100);
-        } catch (IllegalStateException e){
-            android.util.Log.i("Damn", "resume error");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-*/
+        myHandler.postDelayed(myTimer, 500);
 
     }
-    //when screen is exitted the timer stops
-    public void onPause(){
-        super.onPause();
+    private void setPower(final CharSequence text) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                powerOutputToScreen.setText(text);
+            }
+        });
+    }
 
-        //timer.cancel();
+    @Override
+   protected void onStop() {
+       super.onStop();
+       long end = Calendar.getInstance().getTimeInMillis();
+       /*
+       FOr the top times screen=------------------------------------------------------------------------------------------------------------------------
+        */
+        long totalTimeSpent = end-start;
+        //see if longer than the lowest top Time String
+
+        MainActivity.lastPower=sumPower/totalPoints;
+        MainActivity.lastTime=totalTimeSpent;
+        long temp= (long) (MainActivity.averageTime * (numRidesCompleted));
+        temp=temp+totalTimeSpent;
+        temp= (long) (temp/(numRidesCompleted+1));
+        MainActivity.averageTime=temp;
+        MainActivity.averagePower=(MainActivity.averagePower*(numRidesCompleted)+MainActivity.lastPower)/(numRidesCompleted+1);
+
+
+        if (MainActivity.topTimesStrings[0][0]<totalTimeSpent){//rotate 4 down
+
+            MainActivity.topTimesStrings[4][0]=MainActivity.topTimesStrings[3][0];
+            MainActivity.topTimesStrings[4][1]=MainActivity.topTimesStrings[3][1];
+
+            MainActivity.topTimesStrings[3][0]=MainActivity.topTimesStrings[2][0];
+            MainActivity.topTimesStrings[3][1]=MainActivity.topTimesStrings[2][1];
+
+            MainActivity.topTimesStrings[2][0]=MainActivity.topTimesStrings[1][0];
+            MainActivity.topTimesStrings[2][1]=MainActivity.topTimesStrings[1][1];
+
+            MainActivity.topTimesStrings[1][0]=MainActivity.topTimesStrings[0][0];
+            MainActivity.topTimesStrings[1][1]=MainActivity.topTimesStrings[0][1];
+
+            MainActivity.topTimesStrings[0][0]=totalTimeSpent;
+            MainActivity.topTimesStrings[0][1]=start;
+         }
+         else if(MainActivity.topTimesStrings[1][0]<totalTimeSpent){
+            MainActivity.topTimesStrings[4][0]=MainActivity.topTimesStrings[3][0];
+            MainActivity.topTimesStrings[4][1]=MainActivity.topTimesStrings[3][1];
+
+            MainActivity.topTimesStrings[3][0]=MainActivity.topTimesStrings[2][0];
+            MainActivity.topTimesStrings[3][1]=MainActivity.topTimesStrings[2][1];
+
+            MainActivity.topTimesStrings[2][0]=MainActivity.topTimesStrings[1][0];
+            MainActivity.topTimesStrings[2][1]=MainActivity.topTimesStrings[1][1];
+
+            MainActivity.topTimesStrings[1][0]=totalTimeSpent;
+            MainActivity.topTimesStrings[1][1]=start;
+        }
+        else if(MainActivity.topTimesStrings[2][0]<totalTimeSpent){
+            MainActivity.topTimesStrings[4][0]=MainActivity.topTimesStrings[3][0];
+            MainActivity.topTimesStrings[4][1]=MainActivity.topTimesStrings[3][1];
+
+            MainActivity.topTimesStrings[3][0]=MainActivity.topTimesStrings[2][0];
+            MainActivity.topTimesStrings[3][1]=MainActivity.topTimesStrings[2][1];
+
+            MainActivity.topTimesStrings[2][0]=totalTimeSpent;
+            MainActivity.topTimesStrings[2][1]=start;
+        }
+        else if(MainActivity.topTimesStrings[3][0]<totalTimeSpent){
+            MainActivity.topTimesStrings[4][0]=MainActivity.topTimesStrings[3][0];
+            MainActivity.topTimesStrings[4][1]=MainActivity.topTimesStrings[3][1];
+
+            MainActivity.topTimesStrings[3][0]=totalTimeSpent;
+            MainActivity.topTimesStrings[3][1]=start;
+        }
+        else if(MainActivity.topTimesStrings[4][0]<totalTimeSpent){
+            MainActivity.topTimesStrings[4][0]=totalTimeSpent;
+            MainActivity.topTimesStrings[4][1]=start;
+        }
+        //FOr the top power screen=------------------------------------------------------------------------------------------------------------------------
+        if (MainActivity.topPower[0]<powerHigh){//rotate 4 down
+
+            MainActivity.topPower[4]=MainActivity.topPower[3];
+            MainActivity.topPowerStrings[4]=MainActivity.topPowerStrings[3];
+
+            MainActivity.topPower[3]=MainActivity.topPower[2];
+            MainActivity.topPowerStrings[3]=MainActivity.topPowerStrings[2];
+
+            MainActivity.topPower[2]=MainActivity.topPower[1];
+            MainActivity.topPowerStrings[2]=MainActivity.topPowerStrings[1];
+
+            MainActivity.topPower[1]=MainActivity.topPower[0];
+            MainActivity.topPowerStrings[1]=MainActivity.topPowerStrings[0];
+
+            MainActivity.topPower[0]=powerHigh;
+            MainActivity.topPowerStrings[0]=start;
+        }
+        else if(MainActivity.topPower[1]<powerHigh){
+            MainActivity.topPower[4]=MainActivity.topPower[3];
+            MainActivity.topPowerStrings[4]=MainActivity.topPowerStrings[3];
+
+            MainActivity.topPower[3]=MainActivity.topPower[2];
+            MainActivity.topPowerStrings[3]=MainActivity.topPowerStrings[2];
+
+            MainActivity.topPower[2]=MainActivity.topPower[1];
+            MainActivity.topPowerStrings[2]=MainActivity.topPowerStrings[1];
+
+            MainActivity.topPower[1]=powerHigh;
+            MainActivity.topPowerStrings[1]=start;
+        }
+        else if(MainActivity.topPower[2]<powerHigh){
+            MainActivity.topPower[4]=MainActivity.topPower[3];
+            MainActivity.topPowerStrings[4]=MainActivity.topPowerStrings[3];
+
+            MainActivity.topPower[3]=MainActivity.topPower[2];
+            MainActivity.topPowerStrings[3]=MainActivity.topPowerStrings[2];
+
+            MainActivity.topPower[2]=powerHigh;
+            MainActivity.topPowerStrings[2]=start;
+        }
+        else if(MainActivity.topPower[3]<powerHigh){
+            MainActivity.topPower[4]=MainActivity.topPower[3];
+            MainActivity.topPowerStrings[4]=MainActivity.topPowerStrings[3];
+
+            MainActivity.topPower[3]=powerHigh;
+            MainActivity.topPowerStrings[3]=start;
+        }
+        else if(MainActivity.topPower[4]<powerHigh){
+            MainActivity.topPower[4]=powerHigh;
+            MainActivity.topPowerStrings[4]=start;
+        }
     }
 }

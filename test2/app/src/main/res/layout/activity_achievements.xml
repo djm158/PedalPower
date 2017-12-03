@@ -194,7 +194,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 />
             <TextView
-                android:id="@+id/TopPowerOutputDate"
+                android:id="@+id/topPower5Date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
