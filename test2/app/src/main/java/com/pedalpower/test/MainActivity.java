@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        powerOutputToScreen= (TextView)findViewById(R.id.currentPower);
+        powerOutputToScreen= (TextView)findViewById(R.id.currentPowerLabel);
         Log.d("tag", " Debug:                             In onCreate in MainActivity.java");
         sharedPref= getSharedPreferences("userInfo", Context.MODE_PRIVATE);
         editor = sharedPref.edit();
