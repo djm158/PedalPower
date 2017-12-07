@@ -58,7 +58,7 @@ public class start extends AppCompatActivity {
     int totalPoints = 0;//has good and bad
     int errorCount = 0;
     int countTo20 = 0;
-    double high = 12.00;    //W/lb
+    double high = 2000.00;    //W/lb
     double lastData = 0;
     int lastSecond = 0;       //used to know when to update UI time
     int lastNano = 0;         //used to know when to update UI power :: starting with every 10th of a second
