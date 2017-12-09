@@ -211,7 +211,7 @@ Once Bluetooth is hooked up just need to return it from this function.
         graph.getViewport().setMinX(0);
         graph.getViewport().setMaxX(20);
         graph.getViewport().setMinY(0);
-        graph.getViewport().setMaxY(15.0);
+        graph.getViewport().setMaxY(500.0);
 
         graph.getViewport().setYAxisBoundsManual(true);
         graph.getViewport().setXAxisBoundsManual(true);
@@ -247,7 +247,7 @@ Once Bluetooth is hooked up just need to return it from this function.
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                powerOutputToScreen.setText(text);
+                powerOutputToScreen.setText(text + " W");
             }
         });
     }
