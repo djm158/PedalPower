@@ -14,3 +14,10 @@ The source for this app is written in the latest version (3.0.0) of [Android Stu
 Tested on Android 8.0 devices (Nexus 6P, Google Pixel XL). Needed to enable USB debugging and set USB configuration to "MTP (Media Transfer Protocl) in Developer Settings -> Select USB Configuration
 
 Thanks to [Tony Dicola](https://github.com/tdicola/) for the example code.
+
+## Screenshots
+
+![graph](https://github.com/djm158/PedalPower/blob/master/images/PedalPowerGraph.png)
+![main](https://github.com/djm158/PedalPower/blob/master/images/PedalPowerMain.png)
+![stats](https://github.com/djm158/PedalPower/blob/master/images/PedalPowerStats.png)
+![rankings](https://github.com/djm158/PedalPower/blob/master/images/PedalPowerRankings.png)
